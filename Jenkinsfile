@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'siddhesh111/node:latest'
+            image 'siddhesh111/node:v1'
             args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // Mount Docker socket
         }
     }
