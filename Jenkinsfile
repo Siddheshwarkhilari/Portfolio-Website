@@ -14,22 +14,21 @@ pipeline {
              userRemoteConfigs: [[url: 'https://github.com/Siddheshwarkhilari/Portfolio-Website.git']]
       }
     }
-    stage('Build and Test') {
+    stage('Install dependencies') {
       steps {
-        sh 'ls -ltr'
-        // build the project and create a JAR file
-        sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && mvn clean install'
+         echo 'Installing Node.js dependencies'
+         sh 'npm install'  // Installs dependencies from package.json
       }
     }
     stage('Build and Push Docker Image') {
       environment {
-        DOCKER_IMAGE = "siddhesh111/ultimate-cicd:${BUILD_NUMBER}"
+        DOCKER_IMAGE = "siddhesh111/portfolio-website:${BUILD_NUMBER}"
         // DOCKERFILE_LOCATION = "java-maven-sonar-argocd-helm-k8s/spring-boot-app/Dockerfile"
         REGISTRY_CREDENTIALS = credentials('docker-cred')
       }
       steps {
         script {
-            sh 'cd java-maven-sonar-argocd-helm-k8s/spring-boot-app && docker build -t ${DOCKER_IMAGE} .'
+            sh 'docker build -t ${DOCKER_IMAGE} .'
             def dockerImage = docker.image("${DOCKER_IMAGE}")
             docker.withRegistry('https://index.docker.io/v1/', "docker-cred") {
                 dockerImage.push()
@@ -37,34 +36,3 @@ pipeline {
         }
       }
     }
-    stage('Update Deployment File') {
-        environment {
-            GIT_REPO_NAME = "Jenkins-Zero-To-Hero"
-            GIT_USER_NAME = "Siddheshwarkhilari"
-        }
-        steps {
-            withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                sh '''
-                    cd java-maven-sonar-argocd-helm-k8s
-                    git config --global --add safe.directory /var/lib/jenkins/workspace/CICD/java-maven-sonar-argocd-helm-k8s
-                    git config user.email "siddheshkhilari111@gmail.com"
-                    git config user.name "Siddheshwarkhilari"
-                    if [ ! -d ".git" ]; then
-                        git init
-                        git remote add origin https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git
-                    fi
-                    git add .
-                    git commit -m "Saving untracked files before switching branch"
-                    git fetch
-                    git checkout main
-                    git reset --soft origin/main
-                    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" spring-boot-app-manifests/deployment.yml
-                    git add spring-boot-app-manifests/deployment.yml
-                    git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                    git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-                '''
-            }
-        }
-    }
-  }
-}
