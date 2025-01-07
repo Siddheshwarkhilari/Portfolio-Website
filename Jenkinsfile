@@ -28,6 +28,7 @@ pipeline {
             }
             steps {
                 script {
+                    sh 'apt install -y docker.io && systemctl start docker'
                     echo "Building Docker image: ${DOCKER_IMAGE}"
                     sh 'docker build -t ${DOCKER_IMAGE} .'
                     
