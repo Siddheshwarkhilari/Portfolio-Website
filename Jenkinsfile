@@ -11,7 +11,7 @@ pipeline {
         checkout([
              $class: 'GitSCM',
              branches: [[name: '*/main']], // Replace 'main' with the correct branch name
-             userRemoteConfigs: [[url: 'https://github.com/Siddheshwarkhilari/Portfolio-Website.git']]
+             userRemoteConfigs: [[url: 'https://github.com/Siddheshwarkhilari/Portfolio-Website']]
       }
     }
     stage('Install dependencies') {
